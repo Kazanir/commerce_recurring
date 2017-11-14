@@ -2,7 +2,7 @@
 
 namespace Drupal\commerce_recurring\Usage;
 
-use Drupal\commerce_recurring\Usage\UsageRecordInterface;
+use Drupal\commerce_recurring\BillingCycle;
 
 /**
  * Storage interface for usage records.
@@ -19,54 +19,33 @@ interface UsageRecordStorageInterface {
    * @param \Drupal\commerce_recurring\Entity\SubscriptionInterface
    *   The subscription.
    *
-   * @param \Drupal\commerce_order\Entity\OrderInterface
-   *   The recurring order.
+   * @param \Drupal\commerce_recurring\BillingCycle
+   *   The billing cycle.
+   *
+   * @return \Drupal\commerce_recurring\Usage\UsageRecordInterface[]
+   *   The usage records.
    */
-  public function fetchOrderRecords($group_name, $subscription, $order);
+  public function fetchCycleRecords($group_name, $subscription, $cycle);
 
   /**
-   * Fetch all records which pertain to a given group and subscription.
+   * Create or update one or more usage records.
    *
-   * @param string $group_name
-   *   The group name.
-   *
-   * @param \Drupal\commerce_recurring\Entity\SubscriptionInterface
-   *   The subscription.
-   */
-  public function fetchSubscriptionRecords($group_name, $subscription);
-
-  /**
-   * Create a usage record.
-   *
-   * @param \Drupal\commerce_recurring\Usage\UsageRecordInterface
-   *   The usage record to be created.
+   * @param \Drupal\commerce_recurring\Usage\UsageRecordInterface[]
+   *   The usage records to be created or updated.
    *
    * @return void
    */
-  public function createRecord(UsageRecordInterface $record);
+  public function setRecords(array $records);
 
   /**
-   * Update a usage record.
+   * Delete one or more usage records.
    *
-   * @param \Drupal\commerce_recurring\Usage\UsageRecordInterface
-   *   The usage record to be modified.
+   * @param \Drupal\commerce_recurring\Usage\UsageRecordInterface[]
+   *   The usage records to be created or updated.
    *
    * @return void
    */
-  public function modifyRecord(UsageRecordInterface $record);
+  public function deleteRecords(array $records);
 
-  /**
-   * Perform multiple usage operations in a consistent way, failing if one or
-   * more of the requested operations does not succeed.
-   *
-   * @param array $operations
-   *   A list of operations, each consisting of a 2-element array composed of:
-   *
-   *   1. A method name
-   *   2. A list of arguments
-   *
-   * @return void
-   */
-  public function doMultiple($operations);
 }
 

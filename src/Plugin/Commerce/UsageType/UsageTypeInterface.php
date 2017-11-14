@@ -3,30 +3,28 @@
 namespace Drupal\commerce_recurring\Plugin\Commerce\UsageType;
 
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_recurring\BillingCycle;
+use Drupal\Core\Datetime\DrupalDateTime;
 
 /**
  * Usage group plugin type.
  */
 interface UsageTypeInterface {
-
+  // @TODO: How to do this?
   /**
-   * Determines whether an order contains the necessary information for usage
-   * groups of this type to function. The default usage types depend on the
-   * recurring info field defined on the default recurring order bundle and
-   * used by the default periodic recurring engine implementation, and this
-   * function is used to validate that these usage types will behave properly
-   * (or throw an exception) if attached to a subscription which belongs to a
-   * recurring order type that lacks this information.
+   * Returns the list of required interfaces which a subscription type must
+   * implement in order to leverage usage groups of this type.
    *
-   * Other implementations may not require this information or might require
-   * other order fields (thus depending on a recurring order bundle provided
-   * by a different recurring engine plugin) and these methods should be
-   * implemented accordingly.
+   * This allows usage groups to require the subscription type (which also
+   * returns the list of usage groups) to implement specific logic around
+   * free and initial quantities which are not required by all usage group
+   * types, and which need to be implemented by the subscription type as
+   * their logic can vary from usage group to usage group. (The alternative
+   * is putting callbacks into the usage group definition.)
    *
-   * @param \Drupal\commerce_order\Entity\OrderInterface $order
-   *   The order to be validated.
+   * @return string[]
    */
-  public function validateOrder(OrderInterface $order);
+  public static function requiredSubscriptionTypeInterfaces();
 
   /**
    * Determines whether this usage group plugin should block a given property
@@ -35,11 +33,13 @@ interface UsageTypeInterface {
    * @param string $property
    *   The property which is being changed.
    *
-   * @param \Drupal\commerce_order\Entity\OrderInterface $order
-   *   The recurring order during which the change would fall if scheduling
-   *   is not enforced.
+   * @param mixed $currentValue
+   *   The current value of the property.
+   *
+   * @param mixed $newValue
+   *   The new proposed value of the property.
    */
-  public function enforceChangeScheduling($property, OrderInterface $order);
+  public function enforceChangeScheduling($property, $currentValue, $newValue);
 
   /**
    * Returns a list of usage records for this usage group and a given recurring
@@ -51,7 +51,7 @@ interface UsageTypeInterface {
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
    *   The order for which usage
    */
-  public function usageHistory(OrderInterface $order);
+  public function usageHistory(BillingCycle $cycle);
 
   /**
    * Adds usage for this usage group and subscription and recurring order.
@@ -60,10 +60,18 @@ interface UsageTypeInterface {
    * each implementation to override it with its own list of more specific
    * parameters if desired.
    *
-   * @param mixed ...$params
-   *   The usage parameters.
+   * @param mixed $usage
+   *   The usage being added. In default implementations this is an int, but
+   *   we leave it as mixed here so that other implementations feel free to
+   *   modify this for their own use if they really want.
+   *
+   * @param \Drupal\Core\Datetime\DrupalDateTime $start
+   *   The start time for this record.
+   *
+   * @param \Drupal\Core\Datetime\DrupalDateTime $end
+   *   The end time for this record.
    */
-  public function addUsage(...$params);
+  public function addUsage($usage, DrupalDateTime $start, DrupalDateTime $end);
 
   /**
    * Gets the current usage (normally an integer, but who knows) for this usage
@@ -83,7 +91,7 @@ interface UsageTypeInterface {
    * @param \Drupal\commerce_order\OrderInterface $order
    *   The order for which usage completion should be checked.
    */
-  public function isComplete(OrderInterface $order);
+  public function isComplete(BillingCycle $cycle);
 
   /**
    * Returns the charges for this group and a given recurring order.
@@ -94,14 +102,16 @@ interface UsageTypeInterface {
    * @return \Drupal\commerce_recurring\Charge[]
    *   The computed list of charges.
    */
-  public function getCharges(OrderInterface $order);
+  public function getCharges(BillingCycle $cycle);
 
   /**
-   * We need something to react to changes in the subscription plan.
-   * In 1.x this was "onRevisionChange" but that probably doesn't make sense.
+   * We need something to react to changes in the subscription workflow
+   * and plan. This is used both for groups with "default" usage to register
+   * it as well as to make sure that groups which depend on plan changes or
+   * timing can insert or modify records appropriately in reaction.
    *
    * @TODO: Figure out the parameters for this, if any.
    */
-  public function onPlanChange();
+  public function onSubscriptionChange();
 }
 

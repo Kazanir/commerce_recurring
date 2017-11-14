@@ -13,18 +13,21 @@ function commerce_recurring_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ],
-      'usage_type' => [
-        'description' => 'The usage type.',
+      'usage_group' => [
+        'description' => 'The usage group defined in the subscription class.', // @TODO: Work this out.
         'type' => 'varchar_ascii',
         'length' => 255,
         'not null' => TRUE,
-        'default' => '',
       ],
       'subscription_id' => [
         'description' => 'The subscription ID.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0,
+      ],
+      'product_variation_id' => [
+        'description' => 'The product variation ID for this record.',
+        'type' => 'int',
+        'not null' => TRUE,
       ],
       'quantity' => [
         'description' => 'The usage quantity.',
@@ -49,4 +52,6 @@ function commerce_recurring_schema() {
       'timing' => ['start', 'end'],
     ],
   ];
+
+  return $schema;
 }
